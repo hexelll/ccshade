@@ -1,7 +1,7 @@
-local renderer = require"renderer"
-local deepcpy = require"/libs/deepcpy"
+local renderer = require"../renderer/renderer"
+local deepcpy = require"../renderer/libs/deepcpy"
 
-local png = require"/libs/png"
+local png = require"png"
 
 local texture = png("nootnoot.png")
 
