@@ -1,5 +1,5 @@
-local renderer = require"../renderer/renderer"
-local deepcpy = require"../renderer/libs/deepcpy"
+local renderer = require"ccshade/renderer/renderer"
+local deepcpy = require"ccshade/renderer/libs/deepcpy"
 
 local png = require"png"
 
