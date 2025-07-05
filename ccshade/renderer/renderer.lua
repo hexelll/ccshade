@@ -1,7 +1,7 @@
-local deepcpy = require"/libs/deepcpy"
-local box = require "/libs/pixelbox_lite"
-local Mat = require"/libs/Mat"
-local utils = require"/libs/utils"
+local deepcpy = require"libs/deepcpy"
+local box = require "libs/pixelbox_lite"
+local Mat = require"libs/Mat"
+local utils = require"libs/utils"
 
 local _colors = {
         colors.white,
