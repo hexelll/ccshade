@@ -1,7 +1,7 @@
-local renderer = require"ccshade/renderer/renderer"
-local deepcpy = require"ccshade/renderer/libs/deepcpy"
-
 local png = require"png"
+package.path = shell.dir().."../renderer/?.lua"
+local renderer = require"renderer"
+local deepcpy = require"libs.deepcpy"
 
 local texture = png("nootnoot.png")
 
