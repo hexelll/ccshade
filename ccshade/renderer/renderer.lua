@@ -63,13 +63,13 @@ function renderer.zoom(u,v,px,py,scale,_repeatx,_repeaty)
         u = math.fmod(u,1)
         u = u<0 and 1+u or u
     else
-        u = u>=1 and 0 or u<0 and 0 or u
+        u = u>=1 and -1 or u<0 and -1 or u
     end
     if _repeaty then
         v = math.fmod(v,1)
         v = v<0 and 1+v or v
     else
-        v = v>=1 and 0 or v<0 and 0 or v
+        v = v>=1 and -1 or v<0 and -1 or v
     end
     return u,v
 end
@@ -109,11 +109,28 @@ function renderer:setPixel(x,y,pixel)
     end
 end
 
-function renderer:getRgbArray()
+function renderer:getUniqueColors()
     local rgbArr = {}
     for i=1,self.size.x do
         for j=1,self.size.y do
-            rgbArr[i*self.size.x+j] = self:getPixel(i,j).rgb
+            local c = self:getPixel(i,j).rgb
+            local contains = false
+            for k=1,#rgbArr do
+                local equal = true
+                for l=1,3 do
+                    if rgbArr[k][l] ~= c[l] then
+                        equal = false
+                        break
+                    end
+                end
+                if equal then
+                    contains = true
+                    break
+                end
+            end
+            if not contains then
+                rgbArr[#rgbArr+1] = c
+            end
         end
     end
     return rgbArr
@@ -188,7 +205,7 @@ function renderer:getLineBuffer(p1,p2,fn)
 end
 
 function renderer.colorspace.distance(col1,col2)
-    return math.sqrt((col1[1]-col2[1])^2+(col1[2]-col2[2])^2+(col1[3]-col2[3])^2)
+    return (col1[1]-col2[1])^2+(col1[2]-col2[2])^2+(col1[3]-col2[3])^2
 end
 
 function renderer.colorspace.toTermCol(col)
@@ -236,10 +253,10 @@ function renderer.colorspace.mix(col1,col2,k)
 end
 
 function renderer.colorspace.randomize(col,k)
-    return {col[1]+math.random()*k,col[2]+math.random()*k,col[3]+math.random()*k}
+    return normalize{col[1]+math.random()*k,col[2]+math.random()*k,col[3]+math.random()*k}
 end
 
-function renderer.colorspace.kmeans(k,points,centroids)
+function renderer.colorspace.kmeans(k,points,centroids,n)
     -- Initialization: choose k centroids (Forgy, Random Partition, etc.)
 
     -- Initialize clusters list
@@ -250,7 +267,7 @@ function renderer.colorspace.kmeans(k,points,centroids)
     --[ [] for _ in range(k)]
     
     -- Loop until convergence
-    local maxt = 1
+    local maxt = n
     local t = 0
     local converged = false
     while not converged and t < maxt do
@@ -272,26 +289,25 @@ function renderer.colorspace.kmeans(k,points,centroids)
         --   (the standard implementation uses the mean of all points in a
         --     cluster to determine the new centroid)
         local function calculate_centroid(cluster)
-            if #cluster > 0 then
-                local centroid = {0,0,0}
-                for _,point in pairs(cluster) do
-                    for i=1,3 do
-                        centroid[i] = centroid[i]+point[i]
-                    end
-                end
+            local centroid = {0,0,0}
+            for _,point in pairs(cluster) do
                 for i=1,3 do
-                    centroid[i] = centroid[i]/#cluster
+                    centroid[i] = centroid[i]+point[i]
                 end
-                return centroid
-            else
-                return nil
             end
+            for i=1,3 do
+                centroid[i] = centroid[i]/#cluster
+            end
+            return centroid
         end
         
         local new_centroids = {}
         for i,cluster in pairs(clusters) do
-            new_centroids[i] = calculate_centroid(cluster)
-            new_centroids[i] = new_centroids[i] or renderer.colorspace.randomize(deepcpy(centroids[i]),0.1)
+            if #cluster == 0 then
+                new_centroids[i] = centroids[i]
+            else
+                new_centroids[i] = calculate_centroid(cluster)
+            end
         end
         
         converged = true
@@ -320,7 +336,7 @@ function renderer:resetPalette()
     end
 end
 
-function renderer:optimizeColors()
+function renderer:optimizeColors(n)
     local centroids = {} --[c1, c2, ..., ck]
     for i=1,16 do
         centroids[i] = {}
@@ -330,7 +346,7 @@ function renderer:optimizeColors()
             centroids[i][j] = (col1[j]+col2[j])/2
         end
     end
-    local newcolors = self.colorspace.kmeans(16,self:getRgbArray(),centroids)
+    local newcolors = self.colorspace.kmeans(16,self:getUniqueColors(),centroids,n)
     local dblack = {}
     for i=1,16 do
         dblack[i] = self.colorspace.distance(newcolors[i],{0,0,0})
