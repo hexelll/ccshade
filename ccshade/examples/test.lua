@@ -1,9 +1,9 @@
 local png = require"png"
-package.path = shell.dir().."../renderer/?.lua"
+package.path = ";../renderer/?.lua"
 local renderer = require"renderer"
 local deepcpy = require"libs.deepcpy"
 
-local texture = png("nootnoot.png")
+local texture = png("/ccshade/examples/nootnoot.png")
 
 --print(serialise(deepcpy{1,{2,3,{4}}}))
 local r = renderer.new()

@@ -1,5 +1,4 @@
-shell.setDir("/")
-package.path ="?/ccshade/renderer/?.lua"
+package.path =";/ccshade/renderer/?.lua"
 local deepcpy = require"libs.deepcpy"
 local box = require"libs.pixelbox_lite"
 local Mat = require"libs.Mat"
